@@ -15,6 +15,13 @@ from pyspark.sql.functions import lit,col,from_json,coalesce,explode,current_tim
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC # Source data API documentation link
+# MAGIC
+# MAGIC https://api-portal.tfl.gov.uk/api-details#api=Line&operation=Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Source data fetching using API
 
 # COMMAND ----------
@@ -147,7 +154,7 @@ dbutils.fs.mv(stagingDir + f"/input_{currentdatetime}.json", archiveDir + f"/inp
 df_bronze=spark.read.table('bronze.tubestatus').filter("IsloadedtoSilver=='N'").select('identity_key','id','lineStatuses','IsloadedtoSilver','created_timestamp').withColumn('lineStatuses',from_json("lineStatuses",ArrayType(MapType(StringType(),StringType()))))
 df_bronze=df_bronze.withColumn('lineStatuses_explode',explode('lineStatuses'))
 
-df_silver=df_bronze.select('identity_key',lit(current_timestamp()).alias('current_timestamp'),coalesce('lineStatuses_explode.lineId','id').alias('line'),col('lineStatuses_explode.statusSeverity').cast('int').alias('statusSeverity'),'lineStatuses_explode.statusSeverityDescription',col('lineStatuses_explode.reason').alias('disruption_reason'),'created_timestamp')
+df_silver=df_bronze.select('identity_key',col('created_timestamp').alias('current_timestamp'),coalesce('lineStatuses_explode.lineId','id').alias('line'),col('lineStatuses_explode.statusSeverity').cast('int').alias('statusSeverity'),'lineStatuses_explode.statusSeverityDescription',col('lineStatuses_explode.reason').alias('disruption_reason'),lit(current_timestamp()).alias('created_timestamp'))
 
 
 # COMMAND ----------
