@@ -10,6 +10,6 @@ Finally the data is loaded into silver.tubestatus table where major columns like
 The API documentation for source data is available in following link:
 https://api-portal.tfl.gov.uk/api-details#api=Line&operation=Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel
 
-Following is the request parameters details for the api being used
+Following is the request parameters details for the source data API being used
 ![image](https://github.com/harshsohal/TFL_analysis/assets/174956070/2417085a-53ed-48d4-96ae-a77cbafdcc54)
 
