@@ -1,12 +1,17 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Importing necessary libraries
+# MAGIC ## This Notebook is designed to fetch the latest tube line results from the TFL Open API https://api.tfl.gov.uk/Line/Mode/tube/Status, the data is then stored in sql tables using databricks notebooks functionality.
+# MAGIC ##The notebook uses delta table format and medallion framework enriching the data quality as data moves from one layer to the next.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Importing necessary libraries
 
 # COMMAND ----------
 
 import requests
 import time
-import json
 import datetime as dt
 from pyspark.sql.types import ArrayType,MapType,StringType,StructType,StructField
 from pyspark.sql.functions import lit,col,from_json,coalesce,explode,current_timestamp
@@ -15,14 +20,14 @@ from pyspark.sql.functions import lit,col,from_json,coalesce,explode,current_tim
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Source data API documentation link
+# MAGIC ## Source data API documentation link
 # MAGIC
 # MAGIC https://api-portal.tfl.gov.uk/api-details#api=Line&operation=Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Source data fetching using API
+# MAGIC ## Source data fetching using API
 
 # COMMAND ----------
 
@@ -85,13 +90,13 @@ schema = StructType([
 # Reading data into spark dataframe from staging file
 df_input = spark.read.option("multiline","true").schema(schema).json(stagingDir + f"/input_{currentdatetime}.json")
 df_input=df_input.withColumn('IsloadedtoSilver',lit('N')).withColumn('created_timestamp',lit(current_timestamp()))
-df_input=df_input.withColumnRenamed('$type','type')
+df_input=df_input.withColumnRenamed('$type','type')  #renaming the column
 
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Creating delta tables in bronze and silver layer
+# MAGIC ## Creating delta tables in bronze and silver layer
 
 # COMMAND ----------
 
@@ -129,7 +134,7 @@ df_input=df_input.withColumnRenamed('$type','type')
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Loading data in bronze layer
+# MAGIC ## Loading data in bronze layer
 
 # COMMAND ----------
 
@@ -138,7 +143,7 @@ df_input.write.format("delta").mode("append").saveAsTable("bronze.tubestatus")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Moving the staging input file to archive layer after loading to bronze is completed
+# MAGIC ## Moving the staging input file to archive layer after loading to bronze is completed
 
 # COMMAND ----------
 
@@ -147,7 +152,7 @@ dbutils.fs.mv(stagingDir + f"/input_{currentdatetime}.json", archiveDir + f"/inp
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Reading data from bronze layer, formatting and cleansing followed by loading to silver layer
+# MAGIC ## Reading data from bronze layer, formatting and cleansing followed by loading to silver layer
 
 # COMMAND ----------
 
@@ -160,7 +165,7 @@ df_silver=df_bronze.select('identity_key',col('created_timestamp').alias('curren
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Loading data in silver layer
+# MAGIC ## Loading data in silver layer
 
 # COMMAND ----------
 
